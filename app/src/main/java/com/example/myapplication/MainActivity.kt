@@ -29,10 +29,15 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.Checkbox
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Delete
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,8 +109,8 @@ fun BagList() {
             items(items.value ?: emptyList()) { (item, isChecked) ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
                         checked = isChecked, 
@@ -123,6 +128,14 @@ fun BagList() {
                             TextStyle(fontWeight = FontWeight.Bold)
                         }
                     )
+                    IconButton(onClick = {
+                        items.value = items.value.filterNot { it.first == item }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete item"
+                        )
+                    }
                 }
             }
         }
