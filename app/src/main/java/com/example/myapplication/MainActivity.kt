@@ -26,6 +26,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,14 +50,10 @@ class MainActivity : ComponentActivity() {
 fun MainApplicationContent(modifier: Modifier = Modifier) {
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp) // Adds spacing between items
         ) {
-            Text(
-                text = "My Bag List",
-                style = typography.headlineMedium
-            )
-            Print(content = "text of example")
+            Title(title = "My Bag List", modifier = Modifier.fillMaxWidth())
             BagList()
         }
     }
@@ -60,22 +63,23 @@ fun MainApplicationContent(modifier: Modifier = Modifier) {
 fun Title(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
-        style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
-        modifier = modifier
+        style = typography.headlineMedium,
+        modifier = modifier,
+        textAlign = TextAlign.Center,
     )
 }
 
 @Composable
 fun Print(content: String, modifier: Modifier = Modifier) {
     Text(
-        text = "$content",
+        text = content,
         modifier = modifier
     )
 }
 
 @Composable
 fun BagList() {
-    var items = remember { mutableStateOf(listOf<String>()) }
+    var items = remember { mutableStateOf(listOf<Pair<String, Boolean>>()) }
     var text by remember { mutableStateOf("") }
 
     Column {
@@ -87,7 +91,7 @@ fun BagList() {
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = { 
             if (text.isNotBlank()) {
-                items.value = items.value + text
+                items.value = items.value + Pair(text, false)
                 text = "" // Clear the text field after adding
             }
         }) {
@@ -97,8 +101,29 @@ fun BagList() {
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(items.value ?: emptyList()) { item ->
-                Text(text = item)
+            items(items.value ?: emptyList()) { (item, isChecked) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isChecked, 
+                        onCheckedChange = { checked ->
+                            items.value = items.value.map {
+                                if (it.first == item) item to checked else it
+                            }
+                        }
+                    )
+                    Text(
+                        text = item,
+                        style = if (isChecked) {
+                            TextStyle(textDecoration = TextDecoration.LineThrough)
+                        } else {
+                            TextStyle(fontWeight = FontWeight.Bold)
+                        }
+                    )
+                }
             }
         }
     }
