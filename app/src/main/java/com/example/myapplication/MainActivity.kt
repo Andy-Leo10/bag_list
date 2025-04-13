@@ -1,4 +1,5 @@
 package com.example.myapplication
+import com.google.firebase.firestore.FirebaseFirestore
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,8 +86,26 @@ fun Print(content: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun BagList() {
+    val db = FirebaseFirestore.getInstance()
     var items = remember { mutableStateOf(listOf<Pair<String, Boolean>>()) }
     var text by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        db.collection("bag_list")
+            .get()
+            .addOnSuccessListener { documents ->
+                val fetchedItems = documents.map { document ->
+                    Pair(
+                        document.getString("name") ?: "",
+                        document.getBoolean("isChecked") ?: false
+                    )
+                }
+                items.value = fetchedItems
+            }
+            .addOnFailureListener { e ->
+                // Handle the error
+            }
+    }
 
     Column {
         OutlinedTextField(
@@ -96,8 +116,23 @@ fun BagList() {
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = { 
             if (text.isNotBlank()) {
-                items.value = items.value + Pair(text, false)
+                val newItem = Pair(text, false)
+                items.value = items.value + newItem
                 text = "" // Clear the text field after adding
+
+                // Save to Firestore
+                val itemMap = hashMapOf(
+                    "name" to newItem.first,
+                    "isChecked" to newItem.second
+                )
+                db.collection("bag_list")
+                    .add(itemMap)
+                    .addOnSuccessListener { 
+                        // Successfully added
+                    }
+                    .addOnFailureListener { e ->
+                        // Handle the error
+                    }
             }
         }) {
             Text(text = "Add to Bag List")
@@ -118,6 +153,17 @@ fun BagList() {
                             items.value = items.value.map {
                                 if (it.first == item) item to checked else it
                             }
+
+                            // Update Firestore
+                            db.collection("bag_list")
+                                .whereEqualTo("name", item)
+                                .get()
+                                .addOnSuccessListener { documents ->
+                                    for (document in documents) {
+                                        db.collection("bag_list").document(document.id)
+                                            .update("isChecked", checked)
+                                    }
+                                }
                         }
                     )
                     Text(
@@ -130,6 +176,16 @@ fun BagList() {
                     )
                     IconButton(onClick = {
                         items.value = items.value.filterNot { it.first == item }
+
+                        // Delete from Firestore
+                        db.collection("bag_list")
+                            .whereEqualTo("name", item)
+                            .get()
+                            .addOnSuccessListener { documents ->
+                                for (document in documents) {
+                                    db.collection("bag_list").document(document.id).delete()
+                                }
+                            }
                     }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
