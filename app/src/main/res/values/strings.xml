@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Bag List</string>
+    <string name="text_of_example">printing sample text</string>
+    <string name="enter_item_label">Enter bag item</string>
+    <string name="add_to_bag_list">Add to Bag List</string>
+    <string name="title">My Bag List</string>
 </resources>
